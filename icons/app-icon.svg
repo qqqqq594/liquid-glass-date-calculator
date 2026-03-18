@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Liquid Glass Date Calculator Icon</title>
+  <desc id="desc">A glossy liquid-glass calendar icon for the date calculator app.</desc>
+  <defs>
+    <linearGradient id="bg" x1="172" y1="94" x2="874" y2="936" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f7fbff"/>
+      <stop offset="0.34" stop-color="#d9e8ff"/>
+      <stop offset="0.68" stop-color="#e5faff"/>
+      <stop offset="1" stop-color="#ffe7dc"/>
+    </linearGradient>
+    <radialGradient id="flareBlue" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(236 196) rotate(45) scale(292)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="0.42" stop-color="#b3daff" stop-opacity="0.52"/>
+      <stop offset="1" stop-color="#b3daff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="flareMint" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(250 836) rotate(-12) scale(344 268)">
+      <stop offset="0" stop-color="#baffef" stop-opacity="0.82"/>
+      <stop offset="1" stop-color="#baffef" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="flarePeach" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(858 794) rotate(180) scale(288)">
+      <stop offset="0" stop-color="#ffb89e" stop-opacity="0.68"/>
+      <stop offset="1" stop-color="#ffb89e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="card" x1="270" y1="188" x2="716" y2="844" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.84"/>
+      <stop offset="0.34" stop-color="#ffffff" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.18"/>
+    </linearGradient>
+    <linearGradient id="cardStroke" x1="256" y1="176" x2="748" y2="864" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.86"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.28"/>
+    </linearGradient>
+    <radialGradient id="orb" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(512 536) rotate(90) scale(238)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="0.42" stop-color="#eef6ff" stop-opacity="0.82"/>
+      <stop offset="0.82" stop-color="#bfd9ff" stop-opacity="0.58"/>
+      <stop offset="1" stop-color="#9fc7ff" stop-opacity="0.4"/>
+    </radialGradient>
+    <linearGradient id="glassBar" x1="370" y1="258" x2="680" y2="352" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.88"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.28"/>
+    </linearGradient>
+    <filter id="shadow" x="174" y="122" width="680" height="780" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="42" stdDeviation="44" flood-color="#5572a0" flood-opacity="0.22"/>
+    </filter>
+    <filter id="softBlur" x="0" y="0" width="1024" height="1024" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" rx="236" fill="url(#bg)"/>
+  <ellipse cx="250" cy="206" rx="236" ry="236" fill="url(#flareBlue)" filter="url(#softBlur)"/>
+  <ellipse cx="228" cy="826" rx="286" ry="220" fill="url(#flareMint)" filter="url(#softBlur)"/>
+  <ellipse cx="852" cy="782" rx="230" ry="216" fill="url(#flarePeach)" filter="url(#softBlur)"/>
+  <circle cx="854" cy="170" r="148" fill="#ffffff" fill-opacity="0.5" filter="url(#softBlur)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="208" y="152" width="608" height="720" rx="190" fill="url(#card)"/>
+    <rect x="208.5" y="152.5" width="607" height="719" rx="189.5" fill="none" stroke="url(#cardStroke)"/>
+    <path d="M252 178C252 164.745 262.745 154 276 154H748C785.555 154 816 184.445 816 222V324H252V178Z" fill="url(#glassBar)" fill-opacity="0.78"/>
+    <path d="M252 178C252 164.745 262.745 154 276 154H748C785.555 154 816 184.445 816 222V250C720 270 572 270 252 222V178Z" fill="#ffffff" fill-opacity="0.34"/>
+
+    <rect x="310" y="220" width="404" height="92" rx="46" fill="#ffffff" fill-opacity="0.28"/>
+    <rect x="310.5" y="220.5" width="403" height="91" rx="45.5" fill="none" stroke="#ffffff" stroke-opacity="0.46"/>
+    <circle cx="382" cy="266" r="15" fill="#5c93ff" fill-opacity="0.58"/>
+    <circle cx="512" cy="266" r="15" fill="#9adfff" fill-opacity="0.6"/>
+    <circle cx="642" cy="266" r="15" fill="#ffb99d" fill-opacity="0.62"/>
+
+    <circle cx="512" cy="548" r="228" fill="url(#orb)"/>
+    <circle cx="512" cy="548" r="227.5" fill="none" stroke="#ffffff" stroke-opacity="0.54"/>
+    <path d="M366 404C468 452 592 456 686 408" fill="none" stroke="#ffffff" stroke-opacity="0.52" stroke-linecap="round" stroke-width="18"/>
+    <ellipse cx="446" cy="466" rx="148" ry="92" fill="#ffffff" fill-opacity="0.22" transform="rotate(-18 446 466)"/>
+
+    <text x="512" y="610" text-anchor="middle" font-family="SF Pro Rounded, Avenir Next, sans-serif" font-size="218" font-weight="800" fill="#2758c8" fill-opacity="0.9" letter-spacing="-10">D+</text>
+    <text x="512" y="676" text-anchor="middle" font-family="SF Pro Rounded, Avenir Next, sans-serif" font-size="48" font-weight="700" fill="#2b5988" fill-opacity="0.62" letter-spacing="12">TODAY</text>
+
+    <path d="M278 780C394 742 606 742 744 798" fill="none" stroke="#ffffff" stroke-opacity="0.34" stroke-linecap="round" stroke-width="18"/>
+    <path d="M242 198C322 166 430 160 520 166" fill="none" stroke="#ffffff" stroke-opacity="0.56" stroke-linecap="round" stroke-width="12"/>
+  </g>
+</svg>
