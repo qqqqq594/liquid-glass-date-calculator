@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="theme-color" content="#dfe8ff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="날짜 계산기" />
+    <title>리퀴드 글래스 날짜 계산기</title>
+    <style>
+      :root {
+        --safe-top: calc(env(safe-area-inset-top, 0px) + 18px);
+        --safe-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+        --bg-1: #dfe8ff;
+        --bg-2: #eef7ff;
+        --bg-3: #ffe7df;
+        --bg-4: #d8fff4;
+        --glass: rgba(255, 255, 255, 0.32);
+        --glass-strong: rgba(255, 255, 255, 0.48);
+        --glass-soft: rgba(255, 255, 255, 0.2);
+        --glass-border: rgba(255, 255, 255, 0.46);
+        --glass-line: rgba(255, 255, 255, 0.68);
+        --ink: #15324a;
+        --muted: rgba(21, 50, 74, 0.66);
+        --accent: #4c8dff;
+        --accent-strong: #306ef0;
+        --accent-soft: rgba(76, 141, 255, 0.18);
+        --shadow: 0 28px 70px rgba(71, 98, 144, 0.18);
+        --inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        overflow-x: hidden;
+        font-family: "SF Pro Rounded", "SF Pro Display", "Avenir Next", "Apple SD Gothic Neo",
+          "Noto Sans KR", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.95), transparent 28%),
+          radial-gradient(circle at 86% 16%, rgba(115, 184, 255, 0.38), transparent 30%),
+          radial-gradient(circle at 18% 84%, rgba(156, 255, 228, 0.46), transparent 28%),
+          radial-gradient(circle at 88% 80%, rgba(255, 184, 154, 0.48), transparent 24%),
+          linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 42%, #edf3ff 68%, var(--bg-3) 100%);
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        border-radius: 999px;
+        filter: blur(30px);
+        opacity: 0.72;
+        pointer-events: none;
+        animation: drift 18s ease-in-out infinite alternate;
+      }
+
+      body::before {
+        width: 220px;
+        height: 220px;
+        top: 112px;
+        right: -54px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 70%);
+      }
+
+      body::after {
+        width: 260px;
+        height: 260px;
+        left: -78px;
+        bottom: 92px;
+        background: radial-gradient(circle, rgba(160, 255, 235, 0.82) 0%, rgba(160, 255, 235, 0) 72%);
+        animation-duration: 22s;
+      }
+
+      button,
+      input {
+        appearance: none;
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        cursor: pointer;
+      }
+
+      .app {
+        width: min(100vw, 540px);
+        min-height: 100vh;
+        padding: var(--safe-top) 16px calc(var(--safe-bottom) + 28px);
+        display: grid;
+        gap: 16px;
+      }
+
+      .glass-panel {
+        position: relative;
+        overflow: hidden;
+        border-radius: 30px;
+        padding: 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.18) 100%),
+          linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--inner-shadow), var(--shadow);
+        backdrop-filter: blur(30px) saturate(155%);
+        -webkit-backdrop-filter: blur(30px) saturate(155%);
+        isolation: isolate;
+        animation: rise 0.8s ease both;
+      }
+
+      .glass-panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.08) 44%, transparent 62%),
+          radial-gradient(circle at top right, rgba(255, 255, 255, 0.5), transparent 32%);
+        opacity: 0.96;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .glass-panel::after {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        border-radius: 29px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        pointer-events: none;
+      }
+
+      .hero {
+        padding: 22px 20px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.44);
+        border: 1px solid rgba(255, 255, 255, 0.46);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow.soft {
+        background: rgba(255, 255, 255, 0.26);
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        margin-top: 14px;
+        font-size: clamp(2.1rem, 9vw, 3.2rem);
+        line-height: 0.96;
+        letter-spacing: -0.05em;
+      }
+
+      .hero p {
+        margin-top: 12px;
+        max-width: 28ch;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.55;
+      }
+
+      .today-chip {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.18));
+        border: 1px solid rgba(255, 255, 255, 0.48);
+      }
+
+      .today-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 62px;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(76, 141, 255, 0.14);
+        color: var(--accent-strong);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .today-chip strong {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .result-panel {
+        display: grid;
+        gap: 16px;
+      }
+
+      .result-top {
+        display: grid;
+        gap: 8px;
+      }
+
+      .result-label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        width: fit-content;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.34);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .result-main {
+        font-size: clamp(2.1rem, 8vw, 3.4rem);
+        line-height: 0.96;
+        letter-spacing: -0.05em;
+      }
+
+      .result-sub {
+        color: var(--muted);
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .metric {
+        padding: 14px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.16));
+        border: 1px solid rgba(255, 255, 255, 0.42);
+        min-height: 108px;
+        display: grid;
+        gap: 8px;
+        align-content: start;
+      }
+
+      .metric-title {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .metric-value {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.35;
+        word-break: keep-all;
+      }
+
+      .controls {
+        display: grid;
+        gap: 16px;
+      }
+
+      .control-head {
+        display: grid;
+        gap: 10px;
+      }
+
+      h2 {
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+
+      .control-head p {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .mode-switch {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .mode-button,
+      .unit-button,
+      .entry-mode-button {
+        position: relative;
+        min-height: 54px;
+        padding: 0 14px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.22);
+        border: 1px solid rgba(255, 255, 255, 0.36);
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+        transition: transform 180ms ease, background 180ms ease, color 180ms ease, border-color 180ms ease;
+      }
+
+      .mode-button.active,
+      .unit-button.active,
+      .entry-mode-button.active {
+        color: var(--ink);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.2)),
+          linear-gradient(135deg, rgba(76, 141, 255, 0.16), rgba(255, 255, 255, 0));
+        border-color: rgba(255, 255, 255, 0.66);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 26px rgba(89, 120, 164, 0.12);
+      }
+
+      .field-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .entry-mode-switch {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .label-row,
+      .field-legend {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      input[type="date"],
+      input[type="number"],
+      input[type="text"] {
+        width: 100%;
+        min-height: 58px;
+        padding: 0 16px;
+        border-radius: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.42);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.16));
+        color: var(--ink);
+        font-size: 18px;
+        font-weight: 700;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+      }
+
+      input[type="date"]:focus,
+      input[type="number"]:focus,
+      input[type="text"]:focus {
+        outline: 2px solid rgba(76, 141, 255, 0.16);
+        border-color: rgba(76, 141, 255, 0.42);
+      }
+
+      input[type="number"]::-webkit-outer-spin-button,
+      input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      .mini-button,
+      .quick-chip,
+      .secondary-button {
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.26);
+        border: 1px solid rgba(255, 255, 255, 0.36);
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .unit-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .quick-row,
+      .action-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .quick-chip {
+        min-height: 42px;
+        padding: 0 16px;
+      }
+
+      .primary-button {
+        flex: 1 1 190px;
+        min-height: 56px;
+        padding: 0 18px;
+        border-radius: 22px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08)),
+          linear-gradient(135deg, #5aa2ff 0%, #2f76f3 100%);
+        color: white;
+        font-size: 15px;
+        font-weight: 800;
+        box-shadow: 0 18px 34px rgba(68, 112, 191, 0.22);
+      }
+
+      .secondary-button {
+        flex: 1 1 150px;
+      }
+
+      .helper {
+        min-height: 20px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .helper.is-error {
+        color: #b94d64;
+      }
+
+      .summary-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .summary-line {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 16px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14));
+        border: 1px solid rgba(255, 255, 255, 0.38);
+      }
+
+      .summary-title {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .summary-value {
+        flex: 1;
+        text-align: right;
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.45;
+      }
+
+      .footer-note {
+        margin: 0;
+        text-align: center;
+        color: rgba(21, 50, 74, 0.54);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(20px) scale(0.985);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes drift {
+        from {
+          transform: translate3d(0, 0, 0);
+        }
+
+        to {
+          transform: translate3d(18px, -24px, 0);
+        }
+      }
+
+      @media (max-width: 420px) {
+        .app {
+          padding-inline: 14px;
+        }
+
+        .glass-panel {
+          border-radius: 28px;
+          padding: 16px;
+        }
+
+        .metric-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .mode-switch {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .unit-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .summary-line {
+          flex-direction: column;
+        }
+
+        .summary-value {
+          text-align: left;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="glass-panel hero">
+        <span class="eyebrow">Liquid Glass Date</span>
+        <h1>날짜 계산기</h1>
+        <p>오늘을 시작일로 바로 계산하거나 원하는 날짜끼리 간격을 비교해보세요.</p>
+        <div class="today-chip">
+          <span class="today-tag">Today</span>
+          <strong id="todayBadge">오늘 날짜 불러오는 중</strong>
+        </div>
+      </section>
+
+      <section class="glass-panel controls">
+        <div class="control-head">
+          <span class="eyebrow soft">Calculator</span>
+          <div>
+            <h2 id="modeTitle">남은 날짜 보기</h2>
+            <p id="modeCaption">오늘을 기준으로 원하는 날짜가 며칠 남았는지, 또는 얼마나 지났는지 계산합니다.</p>
+          </div>
+        </div>
+
+        <div class="mode-switch" role="tablist" aria-label="계산 모드">
+          <button class="mode-button active" type="button" data-mode="countdown" role="tab" aria-selected="true">
+            남은 날짜
+          </button>
+          <button class="mode-button" type="button" data-mode="add" role="tab" aria-selected="false">
+            더하기
+          </button>
+          <button class="mode-button" type="button" data-mode="subtract" role="tab" aria-selected="false">
+            빼기
+          </button>
+          <button class="mode-button" type="button" data-mode="diff" role="tab" aria-selected="false">
+            차이 보기
+          </button>
+        </div>
+
+        <div class="field-grid">
+          <div class="field" id="entryModeField">
+            <span class="field-legend">날짜 입력 방식</span>
+            <div class="entry-mode-switch" role="group" aria-label="목표 날짜 입력 방식">
+              <button class="entry-mode-button active" type="button" data-entry-mode="picker">날짜 피커</button>
+              <button class="entry-mode-button" type="button" data-entry-mode="manual">직접 입력</button>
+            </div>
+          </div>
+
+          <div class="field" id="countdownPickerField">
+            <div class="label-row">
+              <label for="countdownDate">목표 날짜</label>
+              <button class="mini-button" type="button" id="countdownTodayButton">오늘로</button>
+            </div>
+            <input id="countdownDate" type="date" />
+          </div>
+
+          <div class="field" id="countdownManualField" hidden>
+            <div class="label-row">
+              <label for="countdownManualInput">직접 입력</label>
+              <button class="mini-button" type="button" id="countdownManualTodayButton">오늘 입력</button>
+            </div>
+            <input
+              id="countdownManualInput"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="예: 20260410 또는 2026-04-10"
+            />
+          </div>
+
+          <div class="field" id="baseDateField" hidden>
+            <div class="label-row">
+              <label for="baseDate" id="baseDateLabel">기준 날짜</label>
+              <button class="mini-button" type="button" id="setTodayButton">오늘로</button>
+            </div>
+            <input id="baseDate" type="date" />
+          </div>
+
+          <div class="field" id="compareField" hidden>
+            <div class="label-row">
+              <label for="compareDate">비교 날짜</label>
+              <button class="mini-button" type="button" id="setCompareTodayButton">오늘로</button>
+            </div>
+            <input id="compareDate" type="date" />
+          </div>
+
+          <div class="field" id="amountField" hidden>
+            <label for="amount">얼마나 이동할까요?</label>
+            <input id="amount" type="number" min="0" step="1" inputmode="numeric" placeholder="예: 30" />
+          </div>
+
+          <div class="field" id="unitField" hidden>
+            <span class="field-legend">단위 선택</span>
+            <div class="unit-grid" role="group" aria-label="단위 선택">
+              <button class="unit-button active" type="button" data-unit="days">일</button>
+              <button class="unit-button" type="button" data-unit="weeks">주</button>
+              <button class="unit-button" type="button" data-unit="months">개월</button>
+              <button class="unit-button" type="button" data-unit="years">년</button>
+            </div>
+          </div>
+
+          <div class="field" id="quickField" hidden>
+            <span class="field-legend">빠른 입력</span>
+            <div class="quick-row">
+              <button class="quick-chip" type="button" data-amount="7">7일</button>
+              <button class="quick-chip" type="button" data-amount="30">30일</button>
+              <button class="quick-chip" type="button" data-amount="100">100일</button>
+              <button class="quick-chip" type="button" data-amount="365">365일</button>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button class="primary-button" type="button" id="calculateButton">남은 날짜 계산하기</button>
+            <button class="secondary-button" type="button" id="resetButton">입력값 초기화</button>
+          </div>
+
+          <p class="helper" id="helperText">
+            날짜 피커를 쓰거나 20260410, 2026-04-10처럼 직접 입력해서 오늘부터 며칠 남았는지 볼 수 있어요.
+          </p>
+        </div>
+      </section>
+
+      <section class="glass-panel result-panel" aria-live="polite">
+        <div class="result-top">
+          <span class="result-label" id="resultLabel">오늘부터</span>
+          <strong class="result-main" id="resultMain">D-Day</strong>
+          <span class="result-sub" id="resultSub">목표 날짜를 넣으면 오늘부터 얼마나 남았는지 바로 보여드려요.</span>
+        </div>
+
+        <div class="metric-grid">
+          <article class="metric">
+            <span class="metric-title" id="metricOneTitle">연산</span>
+            <strong class="metric-value" id="metricOneValue">-</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-title" id="metricTwoTitle">차이</span>
+            <strong class="metric-value" id="metricTwoValue">-</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-title" id="metricThreeTitle">포함 계산</span>
+            <strong class="metric-value" id="metricThreeValue">-</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-title" id="metricFourTitle">오늘 기준</span>
+            <strong class="metric-value" id="metricFourValue">-</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="glass-panel summary-list" id="summaryPanel"></section>
+
+      <p class="footer-note">iPhone 상단 Dynamic Island와 브라우저 영역을 피하도록 safe-area 여백을 반영했습니다.</p>
+    </main>
+
+    <script>
+      const state = {
+        mode: "countdown",
+        unit: "days",
+        entryMode: "picker",
+      };
+
+      const modeCopy = {
+        countdown: {
+          title: "남은 날짜 보기",
+          caption: "오늘을 기준으로 원하는 날짜가 며칠 남았는지, 또는 얼마나 지났는지 계산합니다.",
+        },
+        add: {
+          title: "날짜 더하기",
+          caption: "기준 날짜에 일, 주, 월, 년 단위로 날짜를 더합니다.",
+        },
+        subtract: {
+          title: "날짜 빼기",
+          caption: "기준 날짜에서 원하는 만큼 거슬러 올라간 날짜를 계산합니다.",
+        },
+        diff: {
+          title: "날짜 차이 보기",
+          caption: "시작일과 종료일 사이가 며칠 차이인지, 포함하면 며칠인지 보여줍니다.",
+        },
+      };
+
+      const quickOptions = {
+        days: [7, 30, 100, 365],
+        weeks: [1, 2, 4, 8],
+        months: [1, 3, 6, 12],
+        years: [1, 2, 3, 5],
+      };
+
+      const unitLabelMap = {
+        days: "일",
+        weeks: "주",
+        months: "개월",
+        years: "년",
+      };
+
+      const longDateFormatter = new Intl.DateTimeFormat("ko-KR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const weekdayFormatter = new Intl.DateTimeFormat("ko-KR", {
+        weekday: "long",
+      });
+
+      const badgeFormatter = new Intl.DateTimeFormat("ko-KR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        weekday: "short",
+      });
+
+      const refs = {
+        todayBadge: document.getElementById("todayBadge"),
+        resultLabel: document.getElementById("resultLabel"),
+        resultMain: document.getElementById("resultMain"),
+        resultSub: document.getElementById("resultSub"),
+        metricOneTitle: document.getElementById("metricOneTitle"),
+        metricOneValue: document.getElementById("metricOneValue"),
+        metricTwoTitle: document.getElementById("metricTwoTitle"),
+        metricTwoValue: document.getElementById("metricTwoValue"),
+        metricThreeTitle: document.getElementById("metricThreeTitle"),
+        metricThreeValue: document.getElementById("metricThreeValue"),
+        metricFourTitle: document.getElementById("metricFourTitle"),
+        metricFourValue: document.getElementById("metricFourValue"),
+        modeTitle: document.getElementById("modeTitle"),
+        modeCaption: document.getElementById("modeCaption"),
+        baseDateLabel: document.getElementById("baseDateLabel"),
+        entryModeField: document.getElementById("entryModeField"),
+        countdownPickerField: document.getElementById("countdownPickerField"),
+        countdownManualField: document.getElementById("countdownManualField"),
+        baseDateField: document.getElementById("baseDateField"),
+        countdownDate: document.getElementById("countdownDate"),
+        countdownManualInput: document.getElementById("countdownManualInput"),
+        baseDate: document.getElementById("baseDate"),
+        compareDate: document.getElementById("compareDate"),
+        amount: document.getElementById("amount"),
+        compareField: document.getElementById("compareField"),
+        amountField: document.getElementById("amountField"),
+        unitField: document.getElementById("unitField"),
+        quickField: document.getElementById("quickField"),
+        helperText: document.getElementById("helperText"),
+        summaryPanel: document.getElementById("summaryPanel"),
+        modeButtons: Array.from(document.querySelectorAll(".mode-button")),
+        entryButtons: Array.from(document.querySelectorAll(".entry-mode-button")),
+        unitButtons: Array.from(document.querySelectorAll(".unit-button")),
+        quickButtons: Array.from(document.querySelectorAll(".quick-chip")),
+        countdownTodayButton: document.getElementById("countdownTodayButton"),
+        countdownManualTodayButton: document.getElementById("countdownManualTodayButton"),
+        setTodayButton: document.getElementById("setTodayButton"),
+        setCompareTodayButton: document.getElementById("setCompareTodayButton"),
+        calculateButton: document.getElementById("calculateButton"),
+        resetButton: document.getElementById("resetButton"),
+      };
+
+      function todayAtNoon() {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
+      }
+
+      function pad(value) {
+        return String(value).padStart(2, "0");
+      }
+
+      function toInputValue(date) {
+        return [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join("-");
+      }
+
+      function parseInputDate(value) {
+        if (!value) {
+          return null;
+        }
+
+        const parts = value.split("-").map(Number);
+        if (parts.length !== 3 || parts.some(Number.isNaN)) {
+          return null;
+        }
+
+        return new Date(parts[0], parts[1] - 1, parts[2], 12);
+      }
+
+      function createValidatedDate(year, month, day) {
+        const date = new Date(year, month - 1, day, 12);
+
+        if (
+          date.getFullYear() !== year ||
+          date.getMonth() !== month - 1 ||
+          date.getDate() !== day
+        ) {
+          return null;
+        }
+
+        return date;
+      }
+
+      function parseManualDateInput(value) {
+        const trimmed = value.trim();
+        if (!trimmed) {
+          return null;
+        }
+
+        const digitsOnly = trimmed.replace(/\D/g, "");
+        if (/^\d{8}$/.test(digitsOnly)) {
+          const year = Number(digitsOnly.slice(0, 4));
+          const month = Number(digitsOnly.slice(4, 6));
+          const day = Number(digitsOnly.slice(6, 8));
+          return createValidatedDate(year, month, day);
+        }
+
+        const normalized = trimmed.replace(/[./]/g, "-").replace(/\s+/g, "");
+        const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (!match) {
+          return null;
+        }
+
+        return createValidatedDate(Number(match[1]), Number(match[2]), Number(match[3]));
+      }
+
+      function formatLongDate(date) {
+        return longDateFormatter.format(date);
+      }
+
+      function formatWeekday(date) {
+        return weekdayFormatter.format(date);
+      }
+
+      function formatDateWithWeekday(date) {
+        return formatLongDate(date) + " " + formatWeekday(date);
+      }
+
+      function formatShortDate(date) {
+        return date.getFullYear() + ". " + (date.getMonth() + 1) + ". " + date.getDate() + ".";
+      }
+
+      function dayStamp(date) {
+        return Math.round(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
+      }
+
+      function differenceInDays(fromDate, toDate) {
+        return dayStamp(toDate) - dayStamp(fromDate);
+      }
+
+      function addMonthsClamped(date, months) {
+        const day = date.getDate();
+        const monthStart = new Date(date.getFullYear(), date.getMonth() + months, 1, 12);
+        const lastDay = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0, 12).getDate();
+        return new Date(monthStart.getFullYear(), monthStart.getMonth(), Math.min(day, lastDay), 12);
+      }
+
+      function addByUnit(date, amount, unit) {
+        if (unit === "days") {
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount, 12);
+        }
+
+        if (unit === "weeks") {
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount * 7, 12);
+        }
+
+        if (unit === "months") {
+          return addMonthsClamped(date, amount);
+        }
+
+        return addMonthsClamped(date, amount * 12);
+      }
+
+      function buildDday(daysFromToday) {
+        if (daysFromToday === 0) {
+          return "D-Day";
+        }
+
+        if (daysFromToday > 0) {
+          return "D-" + daysFromToday;
+        }
+
+        return "D+" + Math.abs(daysFromToday);
+      }
+
+      function formatWeekChunk(days) {
+        const absolute = Math.abs(days);
+        const weeks = Math.floor(absolute / 7);
+        const remainder = absolute % 7;
+
+        if (weeks === 0) {
+          return absolute + "일";
+        }
+
+        if (remainder === 0) {
+          return weeks + "주";
+        }
+
+        return weeks + "주 " + remainder + "일";
+      }
+
+      function relativePhrase(days) {
+        if (days === 0) {
+          return "오늘과 같은 날";
+        }
+
+        if (days > 0) {
+          return "오늘보다 " + days + "일 뒤";
+        }
+
+        return "오늘보다 " + Math.abs(days) + "일 전";
+      }
+
+      function setHelper(message, isError) {
+        refs.helperText.textContent = message;
+        refs.helperText.classList.toggle("is-error", Boolean(isError));
+      }
+
+      function renderSummary(items) {
+        refs.summaryPanel.innerHTML = items
+          .map(function (item) {
+            return (
+              '<div class="summary-line">' +
+              '<span class="summary-title">' +
+              item.title +
+              "</span>" +
+              '<strong class="summary-value">' +
+              item.value +
+              "</strong>" +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+
+      function refreshTodayBadge() {
+        refs.todayBadge.textContent = badgeFormatter.format(todayAtNoon());
+      }
+
+      function refreshQuickButtons() {
+        const amounts = quickOptions[state.unit];
+        refs.quickButtons.forEach(function (button, index) {
+          const value = amounts[index];
+          button.dataset.amount = String(value);
+          button.textContent = value + unitLabelMap[state.unit];
+        });
+      }
+
+      function syncCountdownInputs(date) {
+        const normalized = toInputValue(date);
+        refs.countdownDate.value = normalized;
+        refs.countdownManualInput.value = normalized;
+      }
+
+      function refreshLayout() {
+        const isCountdown = state.mode === "countdown";
+        const isDiff = state.mode === "diff";
+        const isShift = state.mode === "add" || state.mode === "subtract";
+
+        refs.modeTitle.textContent = modeCopy[state.mode].title;
+        refs.modeCaption.textContent = modeCopy[state.mode].caption;
+        refs.baseDateLabel.textContent = isDiff ? "시작일" : "기준 날짜";
+        refs.entryModeField.hidden = !isCountdown;
+        refs.countdownPickerField.hidden = !isCountdown || state.entryMode !== "picker";
+        refs.countdownManualField.hidden = !isCountdown || state.entryMode !== "manual";
+        refs.baseDateField.hidden = isCountdown;
+        refs.compareField.hidden = !isDiff;
+        refs.amountField.hidden = !isShift;
+        refs.unitField.hidden = !isShift;
+        refs.quickField.hidden = !isShift;
+
+        if (isCountdown) {
+          refs.calculateButton.textContent = "남은 날짜 계산하기";
+          setHelper(
+            state.entryMode === "picker"
+              ? "목표 날짜를 피커로 고르면 오늘부터 몇 일 남았는지 바로 계산합니다."
+              : "직접 입력은 20260410 또는 2026-04-10 형식으로 넣어주세요.",
+            false
+          );
+          return;
+        }
+
+        refs.calculateButton.textContent = isDiff ? "간격 계산하기" : "날짜 계산하기";
+
+        if (isDiff) {
+          setHelper("두 날짜의 차이는 종료일 - 시작일 기준이며, 시작일 포함 일수도 함께 보여줍니다.", false);
+        } else {
+          setHelper("월과 년 계산은 같은 날짜를 우선하고, 해당 달에 없는 날짜면 마지막 날에 맞춥니다.", false);
+        }
+      }
+
+      function setMode(mode) {
+        state.mode = mode;
+
+        refs.modeButtons.forEach(function (button) {
+          const isActive = button.dataset.mode === mode;
+          button.classList.toggle("active", isActive);
+          button.setAttribute("aria-selected", String(isActive));
+        });
+
+        refreshLayout();
+        calculate();
+      }
+
+      function setEntryMode(entryMode) {
+        state.entryMode = entryMode;
+
+        refs.entryButtons.forEach(function (button) {
+          button.classList.toggle("active", button.dataset.entryMode === entryMode);
+        });
+
+        refreshLayout();
+        calculate();
+      }
+
+      function setUnit(unit) {
+        state.unit = unit;
+
+        refs.unitButtons.forEach(function (button) {
+          button.classList.toggle("active", button.dataset.unit === unit);
+        });
+
+        refreshQuickButtons();
+        calculate();
+      }
+
+      function setMetric(index, title, value) {
+        if (index === 1) {
+          refs.metricOneTitle.textContent = title;
+          refs.metricOneValue.textContent = value;
+          return;
+        }
+
+        if (index === 2) {
+          refs.metricTwoTitle.textContent = title;
+          refs.metricTwoValue.textContent = value;
+          return;
+        }
+
+        if (index === 3) {
+          refs.metricThreeTitle.textContent = title;
+          refs.metricThreeValue.textContent = value;
+          return;
+        }
+
+        refs.metricFourTitle.textContent = title;
+        refs.metricFourValue.textContent = value;
+      }
+
+      function calculateCountdown() {
+        const targetDate =
+          state.entryMode === "picker"
+            ? parseInputDate(refs.countdownDate.value)
+            : parseManualDateInput(refs.countdownManualInput.value);
+
+        if (!targetDate) {
+          setHelper(
+            state.entryMode === "picker"
+              ? "목표 날짜를 선택해주세요."
+              : "직접 입력은 20260410 또는 2026-04-10 형식으로 넣어주세요.",
+            true
+          );
+          return;
+        }
+
+        syncCountdownInputs(targetDate);
+
+        const today = todayAtNoon();
+        const signedDays = differenceInDays(today, targetDate);
+        const absoluteDays = Math.abs(signedDays);
+        const entryLabel = state.entryMode === "picker" ? "날짜 피커" : "직접 입력";
+
+        refs.resultLabel.textContent = "오늘부터";
+        refs.resultMain.textContent = buildDday(signedDays);
+
+        if (signedDays > 0) {
+          refs.resultSub.textContent = formatDateWithWeekday(targetDate) + "까지 " + signedDays + "일 남았어요.";
+        } else if (signedDays < 0) {
+          refs.resultSub.textContent = formatDateWithWeekday(targetDate) + "에서 " + absoluteDays + "일 지났어요.";
+        } else {
+          refs.resultSub.textContent = formatDateWithWeekday(targetDate) + "은 오늘입니다.";
+        }
+
+        setMetric(1, "상태", signedDays > 0 ? signedDays + "일 남음" : signedDays < 0 ? absoluteDays + "일 지남" : "오늘");
+        setMetric(2, "주 단위", formatWeekChunk(signedDays));
+        setMetric(3, "포함 계산", "오늘 포함 " + (absoluteDays + 1) + "일");
+        setMetric(4, "입력 방식", entryLabel);
+
+        renderSummary([
+          {
+            title: "오늘",
+            value: formatDateWithWeekday(today),
+          },
+          {
+            title: "목표일",
+            value: formatDateWithWeekday(targetDate),
+          },
+          {
+            title: "요약",
+            value:
+              signedDays > 0
+                ? "오늘부터 " + signedDays + "일 남았어요."
+                : signedDays < 0
+                  ? "오늘 기준으로 " + absoluteDays + "일 지났어요."
+                  : "바로 오늘이에요.",
+          },
+          {
+            title: "입력",
+            value: entryLabel + " | " + toInputValue(targetDate),
+          },
+        ]);
+      }
+
+      function calculateDiff(baseDate, compareDate) {
+        const signedDays = differenceInDays(baseDate, compareDate);
+        const absoluteDays = Math.abs(signedDays);
+        const includedDays = absoluteDays + 1;
+
+        let relationText = "두 날짜가 같습니다.";
+        if (signedDays > 0) {
+          relationText = "종료일이 시작일보다 " + absoluteDays + "일 뒤입니다.";
+        } else if (signedDays < 0) {
+          relationText = "종료일이 시작일보다 " + absoluteDays + "일 앞입니다.";
+        }
+
+        refs.resultLabel.textContent = "두 날짜 사이";
+        refs.resultMain.textContent = absoluteDays + "일 차이";
+        refs.resultSub.textContent =
+          formatWeekday(baseDate) + " -> " + formatWeekday(compareDate) + " | 시작일 포함 " + includedDays + "일";
+
+        setMetric(1, "관계", relationText);
+        setMetric(2, "주 단위", formatWeekChunk(signedDays));
+        setMetric(3, "포함 계산", "시작일 포함 " + includedDays + "일");
+        setMetric(4, "방향", signedDays === 0 ? "같은 날" : signedDays > 0 ? "미래 방향" : "과거 방향");
+
+        renderSummary([
+          {
+            title: "시작일",
+            value: formatDateWithWeekday(baseDate),
+          },
+          {
+            title: "종료일",
+            value: formatDateWithWeekday(compareDate),
+          },
+          {
+            title: "요약",
+            value: relationText,
+          },
+          {
+            title: "간격",
+            value: absoluteDays + "일 차이, 시작일 포함 " + includedDays + "일",
+          },
+        ]);
+      }
+
+      function calculateShift(baseDate, amount) {
+        const direction = state.mode === "subtract" ? -amount : amount;
+        const resultDate = addByUnit(baseDate, direction, state.unit);
+        const movedDays = Math.abs(differenceInDays(baseDate, resultDate));
+        const daysFromToday = differenceInDays(todayAtNoon(), resultDate);
+        const directionLabel = state.mode === "subtract" ? "전" : "후";
+        const verbLabel = state.mode === "subtract" ? "빼면" : "더하면";
+
+        refs.resultLabel.textContent =
+          formatShortDate(baseDate) + " 기준 " + amount + unitLabelMap[state.unit] + " " + directionLabel;
+        refs.resultMain.textContent = formatLongDate(resultDate);
+        refs.resultSub.textContent = formatWeekday(resultDate) + " | " + buildDday(daysFromToday);
+
+        setMetric(1, "연산", amount + unitLabelMap[state.unit] + " " + (state.mode === "subtract" ? "빼기" : "더하기"));
+        setMetric(2, "실제 차이", movedDays + "일 이동");
+        setMetric(3, "포함 계산", "기준일 포함 " + (movedDays + 1) + "일째");
+        setMetric(4, "오늘 기준", relativePhrase(daysFromToday));
+
+        renderSummary([
+          {
+            title: "기준일",
+            value: formatDateWithWeekday(baseDate),
+          },
+          {
+            title: "결과일",
+            value: formatDateWithWeekday(resultDate),
+          },
+          {
+            title: "요약",
+            value:
+              formatShortDate(baseDate) +
+              "에서 " +
+              amount +
+              unitLabelMap[state.unit] +
+              " " +
+              verbLabel +
+              " " +
+              formatShortDate(resultDate),
+          },
+          {
+            title: "D-Day",
+            value: buildDday(daysFromToday) + " | " + relativePhrase(daysFromToday),
+          },
+        ]);
+      }
+
+      function calculate() {
+        if (state.mode === "countdown") {
+          calculateCountdown();
+          return;
+        }
+
+        const baseDate = parseInputDate(refs.baseDate.value);
+
+        if (!baseDate) {
+          setHelper("기준 날짜를 먼저 선택해주세요.", true);
+          return;
+        }
+
+        if (state.mode === "diff") {
+          const compareDate = parseInputDate(refs.compareDate.value);
+
+          if (!compareDate) {
+            setHelper("비교 날짜를 선택해주세요.", true);
+            return;
+          }
+
+          setHelper("두 날짜의 차이는 종료일 - 시작일 기준이며, 시작일 포함 일수도 함께 보여줍니다.", false);
+          calculateDiff(baseDate, compareDate);
+          return;
+        }
+
+        if (refs.amount.value.trim() === "") {
+          setHelper("이동할 숫자를 입력해주세요.", true);
+          return;
+        }
+
+        const amount = Number(refs.amount.value);
+
+        if (!Number.isFinite(amount) || amount < 0 || !Number.isInteger(amount)) {
+          setHelper("이동할 숫자를 0 이상의 정수로 입력해주세요.", true);
+          return;
+        }
+
+        setHelper("월과 년 계산은 같은 날짜를 우선하고, 해당 달에 없는 날짜면 마지막 날에 맞춥니다.", false);
+        calculateShift(baseDate, amount);
+      }
+
+      function resetInputs() {
+        const today = todayAtNoon();
+        syncCountdownInputs(today);
+        refs.baseDate.value = toInputValue(today);
+        refs.compareDate.value = toInputValue(addByUnit(today, 14, "days"));
+        refs.amount.value = "30";
+      }
+
+      refs.modeButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          setMode(button.dataset.mode);
+        });
+      });
+
+      refs.entryButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          setEntryMode(button.dataset.entryMode);
+        });
+      });
+
+      refs.unitButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          setUnit(button.dataset.unit);
+        });
+      });
+
+      refs.quickButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          refs.amount.value = button.dataset.amount;
+          calculate();
+        });
+      });
+
+      refs.countdownTodayButton.addEventListener("click", function () {
+        syncCountdownInputs(todayAtNoon());
+        calculate();
+      });
+
+      refs.countdownManualTodayButton.addEventListener("click", function () {
+        syncCountdownInputs(todayAtNoon());
+        calculate();
+      });
+
+      refs.countdownDate.addEventListener("input", function () {
+        const parsed = parseInputDate(refs.countdownDate.value);
+        if (parsed) {
+          refs.countdownManualInput.value = toInputValue(parsed);
+        }
+        calculate();
+      });
+
+      refs.countdownManualInput.addEventListener("input", function () {
+        const parsed = parseManualDateInput(refs.countdownManualInput.value);
+        if (parsed) {
+          refs.countdownDate.value = toInputValue(parsed);
+          if (state.mode === "countdown" && state.entryMode === "manual") {
+            calculate();
+          }
+        }
+      });
+
+      refs.countdownManualInput.addEventListener("blur", function () {
+        if (state.mode === "countdown" && state.entryMode === "manual") {
+          calculate();
+        }
+      });
+
+      refs.countdownManualInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          calculate();
+        }
+      });
+
+      refs.setTodayButton.addEventListener("click", function () {
+        refs.baseDate.value = toInputValue(todayAtNoon());
+        calculate();
+      });
+
+      refs.setCompareTodayButton.addEventListener("click", function () {
+        refs.compareDate.value = toInputValue(todayAtNoon());
+        calculate();
+      });
+
+      refs.baseDate.addEventListener("input", calculate);
+      refs.compareDate.addEventListener("input", calculate);
+      refs.amount.addEventListener("input", calculate);
+      refs.calculateButton.addEventListener("click", calculate);
+
+      refs.resetButton.addEventListener("click", function () {
+        state.mode = "countdown";
+        state.unit = "days";
+        state.entryMode = "picker";
+        resetInputs();
+        refreshQuickButtons();
+        refs.unitButtons.forEach(function (button) {
+          button.classList.toggle("active", button.dataset.unit === state.unit);
+        });
+        refs.entryButtons.forEach(function (button) {
+          button.classList.toggle("active", button.dataset.entryMode === state.entryMode);
+        });
+        refs.modeButtons.forEach(function (button) {
+          const isActive = button.dataset.mode === state.mode;
+          button.classList.toggle("active", isActive);
+          button.setAttribute("aria-selected", String(isActive));
+        });
+        refreshLayout();
+        calculate();
+      });
+
+      resetInputs();
+      refreshTodayBadge();
+      refreshQuickButtons();
+      refreshLayout();
+      calculate();
+      window.setInterval(refreshTodayBadge, 60000);
+    </script>
+  </body>
+</html>
